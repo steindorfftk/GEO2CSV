@@ -74,6 +74,18 @@ def experimentTyper(target):
 
 	return experiment
 
+def platformFinder(target):
+	last_line = False
+	for line in target:
+		if last_line == True:
+			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
+			linha = linha.split()
+			platform = linha[-1]
+			last_line = False
+		if 'Platforms (' in line:
+			last_line = True
+	return platform
+
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -86,6 +98,7 @@ for code in codes:
 
 #Parse html pages for accession codes	
 n_studies = 0
+
 		
 for value in codes:
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
@@ -98,7 +111,8 @@ for value in codes:
 		with open('Page.html','r') as texto:
 			experiment = experimentTyper(texto) #Encontra o tipo de estudo
 		data_for_studies[value]['Experiment_Type'] = experiment
-		
+		with open('Page.html','r') as texto:
+			data_for_studies[value]['Platform'] = platformFinder(texto)
 		
 		
 		
@@ -111,10 +125,10 @@ for value in codes:
 		break
 		
 with open('Results.csv','w') as texto:
-	texto.write('Accession code , Link , Experiment Type \n')
+	texto.write('Accession code , Link , Experiment Type , Platform \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + '\n')
 		
 		
 	
