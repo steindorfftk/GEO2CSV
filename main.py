@@ -85,6 +85,18 @@ def platformFinder(target):
 		if 'Platforms (' in line:
 			last_line = True
 	return platform
+	
+def organismFinder(target):
+	last_line = False
+	for line in target:
+		if last_line == True:
+			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
+			linha = linha.split()
+			organism = linha[-2] + ' ' + linha[-1]
+			last_line = False
+		if 'nowrap>Organism</' in line:
+			last_line = True
+	return organism	
 
 
 #Get accession codes from input file	
@@ -113,7 +125,8 @@ for value in codes:
 		data_for_studies[value]['Experiment_Type'] = experiment
 		with open('Page.html','r') as texto:
 			data_for_studies[value]['Platform'] = platformFinder(texto)
-		
+		with open('Page.html','r') as texto:
+			data_for_studies[value]['Organism'] = organismFinder(texto)
 		
 		
 		n_studies += 1
@@ -125,10 +138,10 @@ for value in codes:
 		break
 		
 with open('Results.csv','w') as texto:
-	texto.write('Accession code , Link , Experiment Type , Platform \n')
+	texto.write('Accession code , Link , Experiment Type , Platform , Organism \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + '\n')
 		
 		
 	
