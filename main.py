@@ -16,6 +16,7 @@ def getAccession(file):
 	return accessionCodes
 
 def experimentTyper(target):
+	experiment = 'Two or more types'
 	for line in target:
 		if "<td>Expression profiling by MPSS<br></td>" in line:
 			experiment="Expression profiling by MPSS"
@@ -71,7 +72,6 @@ def experimentTyper(target):
 			experiment="SNP genotyping by SNP array"
 		elif "<td>Third-party reanalysis<br></td>" in line:
 			experiment="Third-party reanalysis"
-
 	return experiment
 
 def platformFinder(target):
@@ -88,6 +88,7 @@ def platformFinder(target):
 	
 def organismFinder(target):
 	last_line = False
+	organism = 'Two or more organisms'
 	for line in target:
 		if last_line == True:
 			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
@@ -96,6 +97,7 @@ def organismFinder(target):
 			last_line = False
 		if 'nowrap>Organism</' in line:
 			last_line = True
+	print('Organism = ' + organism)
 	return organism	
 
 
@@ -118,6 +120,7 @@ for value in codes:
 	data_for_studies[value]['Link'] = geo_path	
 	if html_page.status_code==200:
 		html_content=html_page.text
+		print('Parsing ' + value + '...')
 		with open('Page.html','w',encoding='utf-8') as file:
 			file.write(html_content)
 		with open('Page.html','r') as texto:
@@ -134,8 +137,7 @@ for value in codes:
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
-	if n_studies == 5:
-		break
+	
 		
 with open('Results.csv','w') as texto:
 	texto.write('Accession code , Link , Experiment Type , Platform , Organism \n')
