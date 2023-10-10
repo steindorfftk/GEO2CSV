@@ -1,6 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
 
+#Input file
+html_path = 'Data.html'	
+
 def getAccession(file):
 	accessionCodes = []
 	with open(file,'r') as texto:
@@ -71,8 +74,6 @@ def experimentTyper(target):
 
 	return experiment
 
-#Input file
-html_path = 'Data.html'	
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -88,7 +89,8 @@ n_studies = 0
 		
 for value in codes:
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
-	html_page = requests.get(geo_path)	
+	html_page = requests.get(geo_path)
+	data_for_studies[value]['Link'] = geo_path	
 	if html_page.status_code==200:
 		html_content=html_page.text
 		with open('Page.html','w',encoding='utf-8') as file:
@@ -109,10 +111,10 @@ for value in codes:
 		break
 		
 with open('Results.csv','w') as texto:
-	texto.write('Accession code , Experiment Type \n')
+	texto.write('Accession code , Link , Experiment Type \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Experiment_Type'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + '\n')
 		
 		
 	
