@@ -107,7 +107,7 @@ for value in codes:
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
-	if n_studies == 3:
+	if n_studies == 5:
 		break
 		
 with open('Results.csv','w') as texto:
