@@ -22,64 +22,26 @@ def check_for_problems():
 '''
 
 def experimentTyper(target):
+	last_line = False
 	experiment = 'Two or more types'
+	experiment_types = ['Expression profiling by MPSS','Expression profiling by RT-PCR','Expression profiling by SAGE','Expression profiling by SNP array','Expression profiling by array','Expression profiling by genome tiling array','Expression profiling by high throughput sequencing','Genome binding/occupancy profiling by SNP array','Genome binding/occupancy profiling by array','Genome binding/occupancy profiling by genome tiling array','Genome binding/occupancy profiling by high throughput sequencing','Genome variation profiling by SNP array','Genome variation profiling by array','Genome variation profiling by genome tiling array','Genome variation profiling by high throughput sequencing','Methylation profiling by SNP array','Methylation profiling by array','Methylation profiling by genome tiling array','Methylation profiling by high throughput sequencing','Non-coding RNA profiling by array','Non-coding RNA profiling by genome tiling array','Non-coding RNA profiling by high throughput sequencing','Other','Protein profiling by Mass Spec','Protein profiling by protein array','SNP genotyping by SNP array','Third-party reanalysis']
+	experiment_a = []
 	for line in target:
-		if "<td>Expression profiling by MPSS<br></td>" in line:
-			experiment="Expression profiling by MPSS"
-		elif "<td>Expression profiling by RT-PCR<br></td>" in line:
-			experiment="Expression profiling by RT-PCR"
-		elif "<td>Expression profiling by SAGE<br></td>" in line:
-			experiment="Expression profiling by SAGE"
-		elif "<td>Expression profiling by SNP array<br></td>" in line:
-			experiment="Expression profiling by SNP array"
-		elif "<td>Expression profiling by array<br></td>" in line:
-			experiment="Expression profiling by array"
-		elif "<td>Expression profiling by genome tiling array<br></td>" in line:
-			experiment="Expression profiling by genome tiling array"
-		elif "<td>Expression profiling by high throughput sequencing<br></td>" in line:
-			experiment="Expression profiling by high throughput sequencing"
-		elif "<td>Genome binding/occupancy profiling by SNP array<br></td>" in line:
-			experiment="Genome binding/occupancy profiling by SNP array"
-		elif "<td>Genome binding/occupancy profiling by array<br></td>" in line:
-			experiment="Genome binding/occupancy profiling by array"
-		elif "<td>Genome binding/occupancy profiling by genome tiling array<br></td>" in line:
-			experiment="Genome binding/occupancy profiling by genome tiling array"
-		elif "<td>Genome binding/occupancy profiling by high throughput sequencing<br></td>" in line:
-			experiment="Genome binding/occupancy profiling by high throughput sequencing"
-		elif "<td>Genome variation profiling by SNP array<br></td>" in line:
-			experiment="Genome variation profiling by SNP array"
-		elif "<td>Genome variation profiling by array<br></td>" in line:
-			experiment="Genome variation profiling by array"
-		elif "<td>Genome variation profiling by genome tiling array<br></td>" in line:
-			experiment="Genome variation profiling by genome tiling array"
-		elif "<td>Genome variation profiling by high throughput sequencing<br></td>" in line:
-			experiment="Genome variation profiling by high throughput sequencing"
-		elif "<td>Methylation profiling by SNP array<br></td>" in line:
-			experiment="Methylation profiling by SNP array"
-		elif "<td>Methylation profiling by array<br></td>" in line:
-			experiment="Methylation profiling by array"
-		elif "<td>Methylation profiling by genome tiling array<br></td>" in line:
-			experiment="Methylation profiling by genome tiling array"
-		elif "<td>Methylation profiling by high throughput sequencing<br></td>" in line:
-			experiment="Methylation profiling by high throughput sequencing"
-		elif "<td>Non-coding RNA profiling by array<br></td>" in line:
-			experiment="Non-coding RNA profiling by array"
-		elif "<td>Non-coding RNA profiling by genome tiling array<br></td>" in line:
-			experiment="Non-coding RNA profiling by genome tiling array"
-		elif "<td>Non-coding RNA profiling by high throughput sequencing<br></td>" in line:
-			experiment="Non-coding RNA profiling by high throughput sequencing"
-		elif "<td>Other<br></td>" in line:
-			experiment="Other"
-		elif "<td>Protein profiling by Mass Spec<br></td>" in line:
-			experiment="Protein profiling by Mass Spec"
-		elif "<td>Protein profiling by protein array<br></td>" in line:
-			experiment="Protein profiling by protein array"
-		elif "<td>SNP genotyping by SNP array<br></td>" in line:
-			experiment="SNP genotyping by SNP array"
-		elif "<td>Third-party reanalysis<br></td>" in line:
-			experiment="Third-party reanalysis"
+		if last_line == True:
+			for value in experiment_types:
+				if value in line:
+					experiment_a.append(value)
+			last_line = False		
+		if '>Experiment type<' in line:
+			last_line = True
+	experiment = ''		
+	for value in experiment_a:
+		if value == experiment_a[-1]:
+			experiment += value
+		else:
+			experiment += value + ' ; '
 	if verbose == True:
-		print('Experiment type: ' + experiment)		
+		print('Experiment type: ' + experiment)	
 	return experiment
 
 def platformFinder(target):
@@ -126,7 +88,7 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 6:
+	if n_studies == 10:
 		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
