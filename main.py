@@ -80,15 +80,25 @@ def platformFinder(target):
 	
 def organismFinder(target):
 	last_line = False
-	organism = 'Two or more organisms'
+	organism = ''
+	organisms = []
 	for line in target:
 		if last_line == True:
-			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
-			linha = linha.split()
-			organism = linha[-2] + ' ' + linha[-1]
-			last_line = False
-		if 'nowrap>Organism</' in line:
+			line = line.replace(' ','_')
+			line = line.replace('">',' ')
+			line = line.replace('</a>',' ')
+			linha = line.split()
+			for value in linha:
+				if '<' not in value:
+					organisms.append(value.replace('_',' '))
+			last_line = False				
+		if 'nowrap>Organism</' in line or '>Organisms<' in line:
 			last_line = True
+	for value in organisms:
+		if value == organisms[-1]:
+			organism += value
+		else:
+			organism += value + ' ; '		
 	if verbose == True:
 		print('Organism = ' + organism + '\n')
 	return organism	
