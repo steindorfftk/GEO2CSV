@@ -50,25 +50,10 @@ def platformFinder(target):
 	platform_n = ''
 	platforms = []
 	for line in target:
-		if last_line == True:
-			if platform_n == 1:
-				linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
-				linha = linha.split()
-				platform = linha[-1]
-				last_line = False
-			elif platform_n > 1:
-				if len(platforms) < platform_n:
-					if 'GPL' in line:
-						linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
-						linha = linha.split()
-						platforms.append(linha[-1])
-				else:
-					last_line = False			
-		if 'Platforms (' in line:
-			for value in line:
-				if value.isdigit():
-					platform_n = int(value)
-			last_line = True
+		if 'GPL' in line:
+			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
+			linha = linha.split()
+			platforms.append(linha[-1])
 	for value in platforms:
 		if value == platforms[-1]:
 			platform += value
@@ -108,6 +93,8 @@ def organismFinder(target):
 codes = getAccession(html_path)	
 data_for_studies = {}
 
+#codes = ['GSE223409']
+
 for code in codes:
 	data_for_studies[code] = {}
 	
@@ -117,7 +104,7 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 10:
+	if n_studies == 100:
 		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
@@ -140,7 +127,6 @@ for value in codes:
 		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
-	
 	
 		
 with open(output_name,'w') as texto:
