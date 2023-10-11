@@ -2,9 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 
 #Input file
-html_path = 'input/Data.html'
-verbose = True	
-output_name = 'output/Results.csv'
+html_path = 'Data.html'	
 
 def getAccession(file):
 	accessionCodes = []
@@ -16,13 +14,8 @@ def getAccession(file):
 			if '<dd>GSE' in str(value):
 				accessionCodes.append(str(value).replace('<dd>','').replace('</dd>',''))
 	return accessionCodes
-'''
-def check_for_problems():
-	Solve this: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE214730	
-'''
 
 def experimentTyper(target):
-	experiment = 'Two or more types'
 	for line in target:
 		if "<td>Expression profiling by MPSS<br></td>" in line:
 			experiment="Expression profiling by MPSS"
@@ -78,13 +71,11 @@ def experimentTyper(target):
 			experiment="SNP genotyping by SNP array"
 		elif "<td>Third-party reanalysis<br></td>" in line:
 			experiment="Third-party reanalysis"
-	if verbose == True:
-		print('Experiment type: ' + experiment)		
+
 	return experiment
 
 def platformFinder(target):
 	last_line = False
-	platform = "Not found"
 	for line in target:
 		if last_line == True:
 			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
@@ -93,13 +84,10 @@ def platformFinder(target):
 			last_line = False
 		if 'Platforms (' in line:
 			last_line = True
-	if verbose == True:
-		print('Platform = ' + platform)
 	return platform
 	
 def organismFinder(target):
 	last_line = False
-	organism = 'Two or more organisms'
 	for line in target:
 		if last_line == True:
 			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
@@ -108,13 +96,12 @@ def organismFinder(target):
 			last_line = False
 		if 'nowrap>Organism</' in line:
 			last_line = True
-	if verbose == True:
-		print('Organism = ' + organism + '\n')
 	return organism	
 
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
+
 data_for_studies = {}
 
 for code in codes:
@@ -126,14 +113,11 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 7:
-		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
 	data_for_studies[value]['Link'] = geo_path	
 	if html_page.status_code==200:
 		html_content=html_page.text
-		print('Parsing ' + value + '... \n')
 		with open('Page.html','w',encoding='utf-8') as file:
 			file.write(html_content)
 		with open('Page.html','r') as texto:
@@ -146,14 +130,15 @@ for value in codes:
 		
 		
 		n_studies += 1
-		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
+		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
-	
+	if n_studies == 5:
+		break
 		
-with open(output_name,'w') as texto:
-	texto.write('Accession code , Experiment Type , Platform , Organism , Link\n')
+with open('Results.csv','w') as texto:
+	texto.write('Accession code , Link , Experiment Type , Platform , Organism \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
 			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + '\n')
