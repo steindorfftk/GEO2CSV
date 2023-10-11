@@ -46,15 +46,34 @@ def experimentTyper(target):
 
 def platformFinder(target):
 	last_line = False
-	platform = "Not found"
+	platform = ''
+	platform_n = ''
+	platforms = []
 	for line in target:
 		if last_line == True:
-			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
-			linha = linha.split()
-			platform = linha[-1]
-			last_line = False
+			if platform_n == 1:
+				linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
+				linha = linha.split()
+				platform = linha[-1]
+				last_line = False
+			elif platform_n > 1:
+				if len(platforms) < platform_n:
+					if 'GPL' in line:
+						linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
+						linha = linha.split()
+						platforms.append(linha[-1])
+				else:
+					last_line = False			
 		if 'Platforms (' in line:
+			for value in line:
+				if value.isdigit():
+					platform_n = int(value)
 			last_line = True
+	for value in platforms:
+		if value == platforms[-1]:
+			platform += value
+		else:
+			platform += value + ' ; '		
 	if verbose == True:
 		print('Platform = ' + platform)
 	return platform
