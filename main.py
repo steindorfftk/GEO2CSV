@@ -134,14 +134,14 @@ for value in codes:
 	if html_page.status_code==200:
 		html_content=html_page.text
 		print('Parsing ' + value + '... \n')
-		with open('Page.html','w',encoding='utf-8') as file:
+		with open('page_html/Page.html','w',encoding='utf-8') as file:
 			file.write(html_content)
-		with open('Page.html','r') as texto:
+		with open('page_html/Page.html','r') as texto:
 			experiment = experimentTyper(texto) #Encontra o tipo de estudo
 		data_for_studies[value]['Experiment_Type'] = experiment
-		with open('Page.html','r') as texto:
+		with open('page_html/Page.html','r') as texto:
 			data_for_studies[value]['Platform'] = platformFinder(texto)
-		with open('Page.html','r') as texto:
+		with open('page_html/Page.html','r') as texto:
 			data_for_studies[value]['Organism'] = organismFinder(texto)
 		
 		
