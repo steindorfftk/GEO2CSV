@@ -2,7 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 
 #Input file
-html_path = 'Data.html'	
+html_path = 'cancer.html'
+verbose = True	
 
 def getAccession(file):
 	accessionCodes = []
@@ -14,6 +15,10 @@ def getAccession(file):
 			if '<dd>GSE' in str(value):
 				accessionCodes.append(str(value).replace('<dd>','').replace('</dd>',''))
 	return accessionCodes
+'''
+def check_for_problems():
+	Solve this: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE214730	
+'''
 
 def experimentTyper(target):
 	experiment = 'Two or more types'
@@ -72,10 +77,13 @@ def experimentTyper(target):
 			experiment="SNP genotyping by SNP array"
 		elif "<td>Third-party reanalysis<br></td>" in line:
 			experiment="Third-party reanalysis"
+	if verbose == True:
+		print('Experiment type: ' + experiment)		
 	return experiment
 
 def platformFinder(target):
 	last_line = False
+	platform = "Not found"
 	for line in target:
 		if last_line == True:
 			linha = line.replace('</a>',' ').replace('</td>',' ').replace('>',' ')
@@ -84,6 +92,8 @@ def platformFinder(target):
 			last_line = False
 		if 'Platforms (' in line:
 			last_line = True
+	if verbose == True:
+		print('Platform = ' + platform)
 	return platform
 	
 def organismFinder(target):
@@ -97,7 +107,8 @@ def organismFinder(target):
 			last_line = False
 		if 'nowrap>Organism</' in line:
 			last_line = True
-	print('Organism = ' + organism)
+	if verbose == True:
+		print('Organism = ' + organism + '\n')
 	return organism	
 
 
@@ -120,7 +131,7 @@ for value in codes:
 	data_for_studies[value]['Link'] = geo_path	
 	if html_page.status_code==200:
 		html_content=html_page.text
-		print('Parsing ' + value + '...')
+		print('Parsing ' + value + '... \n')
 		with open('Page.html','w',encoding='utf-8') as file:
 			file.write(html_content)
 		with open('Page.html','r') as texto:
@@ -133,14 +144,14 @@ for value in codes:
 		
 		
 		n_studies += 1
-		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')')
+		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
 	
 		
 with open('Results.csv','w') as texto:
-	texto.write('Accession code , Link , Experiment Type , Platform , Organism \n')
+	texto.write('Accession code , Experiment Type , Platform , Organism , Link\n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
 			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + '\n')
