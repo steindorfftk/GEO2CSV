@@ -126,7 +126,7 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 7:
+	if n_studies == 6:
 		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
@@ -153,7 +153,7 @@ for value in codes:
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code , Experiment Type , Platform , Organism , Link\n')
+	texto.write('Accession code , Link, Experiment Type , Platform , Organism \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
 			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + '\n')
