@@ -3,7 +3,7 @@ import requests
 
 #Input file
 html_path = 'input/Data.html'
-verbose = False	
+verbose = True
 output_name = 'output/Results.csv'
 
 def getAccession(file):
@@ -60,7 +60,7 @@ def platformFinder(target):
 		else:
 			platform += value + ' ; '		
 	if verbose == True:
-		print('Platform = ' + platform)
+		print('Platform: ' + platform)
 	return platform
 	
 def organismFinder(target):
@@ -85,12 +85,11 @@ def organismFinder(target):
 		else:
 			organism += value + ' ; '		
 	if verbose == True:
-		print('Organism = ' + organism + '\n')
+		print('Organism: ' + organism)
 	return organism	
 
 	
 def sampleFinder(target):
-	last_line = False
 	samples = ''
 	for line in target:
 		if 'Samples (' in line:
@@ -98,8 +97,18 @@ def sampleFinder(target):
 			for value in line:
 				if 'Sample' in value:
 					samples = value[9:-1]
+	if verbose == True:
+		print('Samples: ' + samples)	
 	return samples	
 
+def sraChecker(target):
+	sra = 'No'
+	for line in target:
+		if 'Raw data are available in SRA' in line:
+			sra = 'Yes'
+	if verbose == True:
+		print('SRA: ' + sra)	
+	return sra		
 
 
 #Get accession codes from input file	
@@ -117,7 +126,7 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 10:
+	if n_studies == 50:
 		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
@@ -128,26 +137,26 @@ for value in codes:
 		with open('tmp/Page.html','w',encoding='utf-8') as file:
 			file.write(html_content)
 		with open('tmp/Page.html','r') as texto:
-			experiment = experimentTyper(texto) #Encontra o tipo de estudo
-		data_for_studies[value]['Experiment_Type'] = experiment
+			data_for_studies[value]['Experiment_Type'] =  experimentTyper(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Platform'] = platformFinder(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Organism'] = organismFinder(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Samples'] = sampleFinder(texto)
-		
+		with open('tmp/Page.html','r') as texto:
+			data_for_studies[value]['SRA'] = sraChecker(texto)
 		n_studies += 1
-		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
+		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples \n')
+	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples , SRA \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + ' , ' + value['SRA'] + '\n')
 		
 		
 	
