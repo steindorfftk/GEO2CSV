@@ -3,7 +3,7 @@ import requests
 
 #Input file
 html_path = 'input/Data.html'
-verbose = True
+verbose = False
 output_name = 'output/Results.csv'
 
 def getAccession(file):
@@ -16,10 +16,6 @@ def getAccession(file):
 			if '<dd>GSE' in str(value):
 				accessionCodes.append(str(value).replace('<dd>','').replace('</dd>',''))
 	return accessionCodes
-'''
-def check_for_problems():
-	Solve this: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE214730	
-'''
 
 def experimentTyper(target):
 	last_line = False
@@ -104,12 +100,20 @@ def sampleFinder(target):
 def sraChecker(target):
 	sra = 'No'
 	for line in target:
-		if 'Raw data are available in SRA' in line:
+		if '/Traces/' in line:
 			sra = 'Yes'
 	if verbose == True:
 		print('SRA: ' + sra)	
 	return sra		
 
+def sralinkFinder(target):
+	for line in target:
+		if '/Traces/' in line:
+			line = line.replace(' ','_').replace('href="',' ').replace('">SRA',' ').split()
+			for value in line:
+				if 'Traces' in value:
+					sra_link = 'www.ncbi.nlm.nih.gov' + value	
+	return sra_link
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -146,17 +150,24 @@ for value in codes:
 			data_for_studies[value]['Samples'] = sampleFinder(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['SRA'] = sraChecker(texto)
-		n_studies += 1
+
+		with open('tmp/Page.html','r') as texto:
+			if data_for_studies[value]['SRA'] == 'Yes':
+				data_for_studies[value]['SRA_link'] = sralinkFinder(texto)
+			else:
+				data_for_studies[value]['SRA_link'] = 'NA'
+				
+		n_studies += 1		
 		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples , SRA \n')
+	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples , SRA , SRA Link \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + ' , ' + value['SRA'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + ' , ' + value['SRA'] + ' , ' + value['SRA_link'] + '\n')
 		
 		
 	
