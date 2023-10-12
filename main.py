@@ -35,13 +35,12 @@ def experimentTyper(target):
 		if value == experiment_a[-1]:
 			experiment += value
 		else:
-			experiment += value + ' ; '
+			experiment += value + ' / '
 	if verbose == True:
 		print('Experiment type: ' + experiment)	
 	return experiment
 
 def platformFinder(target):
-	last_line = False
 	platform = ''
 	platform_n = ''
 	platforms = []
@@ -54,7 +53,7 @@ def platformFinder(target):
 		if value == platforms[-1]:
 			platform += value
 		else:
-			platform += value + ' ; '		
+			platform += value + ' / '		
 	if verbose == True:
 		print('Platform: ' + platform)
 	return platform
@@ -79,7 +78,7 @@ def organismFinder(target):
 		if value == organisms[-1]:
 			organism += value
 		else:
-			organism += value + ' ; '		
+			organism += value + ' / '		
 	if verbose == True:
 		print('Organism: ' + organism)
 	return organism	
@@ -114,6 +113,17 @@ def sralinkFinder(target):
 				if 'Traces' in value:
 					sra_link = 'www.ncbi.nlm.nih.gov' + value	
 	return sra_link
+	
+def getTitle(target):
+	last_line = False
+	for line in target:
+		if last_line == True:
+			line = line.replace('<td style="text-align: justify">','').replace('</td>','')
+			title = line[:-1]
+			last_line = False
+		if '>Title' in line:
+			last_line = True
+	return title	
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -130,8 +140,8 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 50:
-		break
+#	if n_studies == 25:
+#		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
 	data_for_studies[value]['Link'] = geo_path	
@@ -156,7 +166,8 @@ for value in codes:
 				data_for_studies[value]['SRA_link'] = sralinkFinder(texto)
 			else:
 				data_for_studies[value]['SRA_link'] = 'NA'
-				
+		with open('tmp/Page.html','r') as texto:
+			data_for_studies[value]['Title'] = getTitle(texto)	
 		n_studies += 1		
 		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
 	else:
@@ -164,10 +175,10 @@ for value in codes:
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples , SRA , SRA Link \n')
+	texto.write('Accession code ; Link ; Title ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + ' , ' + value['SRA'] + ' , ' + value['SRA_link'] + '\n')
+			texto.write(key + ' ; ' + value['Link'] + ' ; ' + value['Title'] + ' ; ' + value['Experiment_Type'] + ' ; ' + value['Platform'] + ' ; ' + value['Organism'] + ' ; ' + value['Samples'] + ' ; ' + value['SRA'] + ' ; ' + value['SRA_link'] + '\n')
 		
 		
 	
