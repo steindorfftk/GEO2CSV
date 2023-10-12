@@ -148,7 +148,7 @@ n_studies = 0
 
 		
 for value in codes:
-#	if n_studies == 25:
+#	if n_studies == 25: #Limits the number of experiments parsed
 #		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
@@ -178,7 +178,8 @@ for value in codes:
 			data_for_studies[value]['Title'] = getTitle(texto)	
 		n_studies += 1		
 		seconds = time() - start
-		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - Run time: '+ str(round(seconds)) +  ' seconds (Approximately ' + str(round(n_studies/seconds,2)) + ' per second) \n---------')
+		tax = (seconds/n_studies*len(codes)) - seconds 
+		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - (Approximately ' + str(round(tax)) + ' seconds remaining) \n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
