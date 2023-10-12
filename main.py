@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+from time import time, sleep
 
 #Input file
 html_path = 'input/Data.html'
@@ -50,6 +51,9 @@ def platformFinder(target):
 			linha = linha.split()
 			platforms.append(linha[-1])
 	for value in platforms:
+		if value[:3] != 'GPL':
+			platforms.remove(value)		
+	for value in platforms:
 		if value == platforms[-1]:
 			platform += value
 		else:
@@ -98,6 +102,8 @@ def sampleFinder(target):
 
 def sraChecker(target):
 	sra = 'No'
+	if 'array' in data_for_studies[value]['Experiment_Type']:
+		sra = 'No (Array)'
 	for line in target:
 		if '/Traces/' in line:
 			sra = 'Yes'
@@ -124,6 +130,8 @@ def getTitle(target):
 		if '>Title' in line:
 			last_line = True
 	return title	
+
+start = time()
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -169,16 +177,17 @@ for value in codes:
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Title'] = getTitle(texto)	
 		n_studies += 1		
-		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
+		seconds = time() - start
+		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - Run time: '+ str(round(seconds)) +  ' seconds (Approximately ' + str(round(n_studies/seconds,2)) + ' per second) \n---------')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code ; Link ; Title ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link \n')
+	texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Title \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' ; ' + value['Link'] + ' ; ' + value['Title'] + ' ; ' + value['Experiment_Type'] + ' ; ' + value['Platform'] + ' ; ' + value['Organism'] + ' ; ' + value['Samples'] + ' ; ' + value['SRA'] + ' ; ' + value['SRA_link'] + '\n')
+			texto.write(key + ' ; ' + value['Link'] + ' ; ' + value['Experiment_Type'] + ' ; ' + value['Platform'] + ' ; ' + value['Organism'] + ' ; ' + value['Samples'] + ' ; ' + value['SRA'] + ' ; ' + value['SRA_link'] + ' ; ' + value['Title'] + '\n')
 		
 		
 	
