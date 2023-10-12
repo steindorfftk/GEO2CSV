@@ -3,7 +3,7 @@ import requests
 
 #Input file
 html_path = 'input/Data.html'
-verbose = True	
+verbose = False	
 output_name = 'output/Results.csv'
 
 def getAccession(file):
@@ -88,6 +88,19 @@ def organismFinder(target):
 		print('Organism = ' + organism + '\n')
 	return organism	
 
+	
+def sampleFinder(target):
+	last_line = False
+	samples = ''
+	for line in target:
+		if 'Samples (' in line:
+			line = line.replace(' ','_').replace('<td>',' ').replace('<div',' ').replace('</td',' ').split()
+			for value in line:
+				if 'Sample' in value:
+					samples = value[9:-1]
+	return samples	
+
+
 
 #Get accession codes from input file	
 codes = getAccession(html_path)	
@@ -104,8 +117,8 @@ n_studies = 0
 
 		
 for value in codes:
-#	if n_studies == 100:
-#		break
+	if n_studies == 10:
+		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
 	data_for_studies[value]['Link'] = geo_path	
@@ -121,7 +134,8 @@ for value in codes:
 			data_for_studies[value]['Platform'] = platformFinder(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Organism'] = organismFinder(texto)
-		
+		with open('tmp/Page.html','r') as texto:
+			data_for_studies[value]['Samples'] = sampleFinder(texto)
 		
 		n_studies += 1
 		print('Done: ' + value + ' (' + str(n_studies) + '/' + str(len(codes))+ ')\n---------')
@@ -130,10 +144,10 @@ for value in codes:
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code , Link, Experiment Type , Platform , Organism \n')
+	texto.write('Accession code , Link, Experiment Type , Platform , Organism , Samples \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + '\n')
+			texto.write(key + ' , ' + value['Link'] + ' , ' + value['Experiment_Type'] + ' , ' + value['Platform'] + ' , ' + value['Organism'] + ' , ' + value['Samples'] + '\n')
 		
 		
 	
