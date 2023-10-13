@@ -1,11 +1,21 @@
 from bs4 import BeautifulSoup
 import requests
 from time import time, sleep
+import os
 
 #Input file
-html_path = 'input/Data.html'
+paths = os.listdir('input/')
+
+
+html_path = []
+
+for path in paths:
+	if '.html' in path:
+		html_path.append(path)
 verbose = False
 output_name = 'output/Results.csv'
+
+
 
 def getAccession(file):
 	accessionCodes = []
@@ -134,7 +144,15 @@ def getTitle(target):
 start = time()
 
 #Get accession codes from input file	
-codes = getAccession(html_path)	
+codes = []
+
+for page in html_path:
+	path = 'input/' + page
+	acc = getAccession(path)
+	for value in acc:
+		codes.append(value)
+
+		
 data_for_studies = {}
 
 #codes = ['GSE223409']
