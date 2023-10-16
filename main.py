@@ -239,8 +239,8 @@ n_studies = 0
 
 		
 for value in codes:
-	if n_studies == 5: #Limits the number of experiments parsed
-		break
+#	if n_studies == 50: #Limits the number of experiments parsed
+#		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
 	data_for_studies[value] = {}
