@@ -156,13 +156,20 @@ def tissueFinder():
 	page_source = driver.page_source
 	lines = page_source.split('\n')
 	for line in lines:
-		if 'divhidden' in line and 'display:' in line:
-			line = line.replace(' ','_').replace('id="',' ').replace('"_name',' ').split()
-			for stuff in line:
-				if 'divhidden' in stuff and 'display' not in stuff:
-					tag_id = '//*[contains(@id, "{}")]/a'.format(stuff)
-	button = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, tag_id)))				
-	button.click()
+		if 'Samples (' in line:
+			line = line.replace(' ','_').replace('<td>',' ').replace('<div',' ').replace('</td',' ').split()
+			for value in line:
+				if 'Sample' in value:
+					samples = value[9:-1]		
+	if int(samples) > 3:
+		for line in lines:
+			if 'divhidden' in line and 'display:' in line:
+				line = line.replace(' ','_').replace('id="',' ').replace('"_name',' ').split()
+				for stuff in line:
+					if 'divhidden' in stuff and 'display' not in stuff:
+						tag_id = '//*[contains(@id, "{}")]/a'.format(stuff)
+		button = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, tag_id)))				
+		button.click()
 	page_source = driver.page_source
 	with open('tmp/selenium.html','w',encoding='utf-8') as file:
 		file.write(page_source)
@@ -239,8 +246,8 @@ n_studies = 0
 
 		
 for value in codes:
-#	if n_studies == 50: #Limits the number of experiments parsed
-#		break
+	if n_studies == 20: #Limits the number of experiments parsed
+		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
 	data_for_studies[value] = {}
@@ -277,7 +284,7 @@ for value in codes:
 		n_studies += 1		
 		seconds = time() - start
 		tax = (seconds/n_studies*len(codes)) - seconds 
-		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - (Approximately ' + str(round(tax)) + ' seconds remaining) \n---------')
+		print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - (Approximately ' + str(round(tax)) + ' seconds remaining) \n---------\n\n')
 	else:
 		print(f'Failed to download HTML. Status code: {html_page.status_code}')
 	
