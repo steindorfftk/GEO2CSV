@@ -2,6 +2,12 @@ from bs4 import BeautifulSoup
 import requests
 from time import time, sleep
 import os
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
+import re 
 
 #Input file
 paths = os.listdir('input/')
@@ -13,6 +19,7 @@ for path in paths:
 	if '.html' in path:
 		html_path.append(path)
 verbose = False
+tissue = True
 output_name = 'output/Results.csv'
 
 
@@ -141,6 +148,76 @@ def getTitle(target):
 			last_line = True
 	return title	
 
+def tissueFinder():
+	samplecodes = []
+	tissues = []
+	driver = webdriver.Firefox()
+	driver.get(geo_path)
+	page_source = driver.page_source
+	lines = page_source.split('\n')
+	for line in lines:
+		if 'divhidden' in line and 'display:' in line:
+			line = line.replace(' ','_').replace('id="',' ').replace('"_name',' ').split()
+			for stuff in line:
+				if 'divhidden' in stuff and 'display' not in stuff:
+					tag_id = '//*[contains(@id, "{}")]/a'.format(stuff)
+	button = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, tag_id)))				
+	button.click()
+	page_source = driver.page_source
+	with open('tmp/selenium.html','w',encoding='utf-8') as file:
+		file.write(page_source)
+	driver.quit()
+	sample_links = []
+	with open('tmp/selenium.html','r') as texto:
+		for line in texto:
+			if 'GSM' in line:
+				line = line.replace(' ','_').replace('href="',' ').replace('"_onmouse',' ').split()
+				for stuff in line:
+					if 'geo/query' in stuff:
+						newnewlink = 'https://www.ncbi.nlm.nih.gov' + stuff	
+						sample_links.append(newnewlink)
+	tissues = []
+	cell_types = []
+	pattern_t = re.compile(r'tissue:(.*?)<br>', re.DOTALL)
+	pattern_c = re.compile(r'cell type:(.*?)<br>', re.DOTALL)
+	for valor in sample_links:
+		sample_path = valor
+		sample_html = requests.get(sample_path)
+		if sample_html.status_code==200:
+			sample_content=sample_html.text
+			with open('tmp/sample.html','w',encoding='utf-8') as file:
+				file.write(sample_content)					
+			with open('tmp/sample.html','r') as texto:
+				for line in texto:
+					if 'tissue:' in line:
+						match = pattern_t.search(line)
+						if match:
+							result=match.group(1).strip()
+							if result not in tissues:
+								tissues.append(result)
+					if 'cell type' in line:
+						match = pattern_c.search(line)
+						if match:
+							result=match.group(1).strip()
+							if result not in cell_types:
+								cell_types.append(result)
+	tissue = ''
+	cells = ''
+	for value in tissues:
+		if value == tissues[-1]:
+			tissue += value
+		else:
+			tissue += value + ' / '		
+	for value in cell_types:
+		if value == cell_types[-1]:
+			cells += value
+		else:
+			cells += value + ' / '
+	return tissue, cells		
+			
+		
+					
+
 start = time()
 
 #Get accession codes from input file	
@@ -155,21 +232,18 @@ for page in html_path:
 		
 data_for_studies = {}
 
-#codes = ['GSE223409']
-
-for code in codes:
-	data_for_studies[code] = {}
-	
+#codes = ['GSE244310']
 
 #Parse html pages for accession codes	
 n_studies = 0
 
 		
 for value in codes:
-#	if n_studies == 25: #Limits the number of experiments parsed
-#		break
+	if n_studies == 5: #Limits the number of experiments parsed
+		break
 	geo_path = 'https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=' + value
 	html_page = requests.get(geo_path)
+	data_for_studies[value] = {}
 	data_for_studies[value]['Link'] = geo_path	
 	if html_page.status_code==200:
 		html_content=html_page.text
@@ -186,12 +260,18 @@ for value in codes:
 			data_for_studies[value]['Samples'] = sampleFinder(texto)
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['SRA'] = sraChecker(texto)
-
+			
 		with open('tmp/Page.html','r') as texto:
 			if data_for_studies[value]['SRA'] == 'Yes':
 				data_for_studies[value]['SRA_link'] = sralinkFinder(texto)
 			else:
 				data_for_studies[value]['SRA_link'] = 'NA'
+		if tissue == True: 
+			data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'] = tissueFinder()		
+		else:
+			data_for_studies[value]['Tissue'] = ''
+			data_for_studies[value]['Cells'] = ''
+	
 		with open('tmp/Page.html','r') as texto:
 			data_for_studies[value]['Title'] = getTitle(texto)	
 		n_studies += 1		
@@ -203,10 +283,10 @@ for value in codes:
 	
 		
 with open(output_name,'w') as texto:
-	texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Title \n')
+	texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Title \n')
 	for key, value in data_for_studies.items():
 		if 'Experiment_Type' in value.keys():
-			texto.write(key + ' ; ' + value['Link'] + ' ; ' + value['Experiment_Type'] + ' ; ' + value['Platform'] + ' ; ' + value['Organism'] + ' ; ' + value['Samples'] + ' ; ' + value['SRA'] + ' ; ' + value['SRA_link'] + ' ; ' + value['Title'] + '\n')
+			texto.write(key + ' ; ' + value['Link'] + ' ; ' + value['Experiment_Type'] + ' ; ' + value['Platform'] + ' ; ' + value['Organism'] + ' ; ' + value['Samples'] + ' ; ' + value['SRA'] + ' ; ' + value['SRA_link'] + ' ; ' + value['Tissue']  + ' ; ' + value['Cells'] + ' ; ' + value['Title'] + '\n')
 		
 		
 	
