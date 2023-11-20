@@ -5,6 +5,7 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 import re 
@@ -24,7 +25,8 @@ verbose = False
 tissue = True
 output_name = 'output/Results.csv'
 
-
+firefox_options = Options()
+firefox_options.add_argument('--headless')
 
 def getAccession(file):
 	accessionCodes = []
@@ -153,7 +155,7 @@ def getTitle(target):
 def tissueFinder():
 	samplecodes = []
 	tissues = []
-	driver = webdriver.Firefox()
+	driver = webdriver.Firefox(options=firefox_options)
 	driver.get(geo_path)
 	page_source = driver.page_source
 	lines = page_source.split('\n')
