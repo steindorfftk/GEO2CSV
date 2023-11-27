@@ -243,13 +243,28 @@ for page in html_path:
 		
 data_for_studies = {}
 
-#codes = ['GSE48865']
+
 
 #Parse html pages for accession codes	
 n_studies = 0
 
-with open(output_name,'w') as texto:
-	texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Title \n')
+files = os.listdir('output/')
+
+if output_name[7:] not in files:
+	with open(output_name,'w') as texto:
+		texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Title \n')
+else:
+	with open(output_name,'r') as texto:
+		done_codes = []
+		for line in texto:
+			if 'Accession code' not in line:
+				linha = line.split()
+				done_codes.append(linha[0])	
+		codes = [value for value in codes if value not in done_codes]		
+
+
+#codes = ['GSE48865']
+	
 
 with open(output_name,'a') as output:		
 	for value in codes:
