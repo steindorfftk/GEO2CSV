@@ -1,7 +1,7 @@
 # Installation
 - Download the program files: Click on '<> Code' and then on 'Download ZIP'
 - Place the 'GEO-scraper_main.zip' file on the installation directory of your choice.
-- Unzip the file (unzip GEO-scraper_main.zip)  
+- Chang into the installation directory and unzip the file (unzip GEO-scraper_main.zip)  
 - Install necessary packages: selenium, beutifulsoup4 and requests (pip install package)
 
 # Input File Preparation
