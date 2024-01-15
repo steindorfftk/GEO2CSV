@@ -12,18 +12,19 @@ import re
 
 print('Starting')
 
+#OPTIONS
+verbose = False
+complete = True
+output_name = 'output'
+
 #Input file
 paths = os.listdir('input/')
-
 
 html_path = []
 
 for path in paths:
 	if '.html' in path:
 		html_path.append(path)
-verbose = False
-tissue = True
-output_name = 'output/Glioblastoma.csv'
 
 firefox_options = Options()
 firefox_options.add_argument('--headless')
@@ -243,7 +244,7 @@ for page in html_path:
 		
 data_for_studies = {}
 
-
+output_name = 'output/' + output_name + '.csv'
 
 #Parse html pages for accession codes	
 n_studies = 0
@@ -303,7 +304,7 @@ with open(output_name,'a') as output:
 				else:
 					data_for_studies[value]['SRA_link'] = 'NA'
 				output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
-			if tissue == True: 
+			if complete == True: 
 				data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'] = tissueFinder()
 			else:
 				data_for_studies[value]['Tissue'] = ''
