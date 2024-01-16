@@ -21,4 +21,4 @@
 - 3 - Run the main.py file (python3 main.py)
 - 4 - A .csv file with basic information about these studies will be created in output folder
 
-## This version retrieves the following information: Accession code, GEO link, Study title, Experiment type, platform, organisms, number of samples, SRA availability, SRA link, Tissues, Cell Types and Title
+## This version retrieves the following information: Accession code, GEO link, Citation, Experiment type, Platform, Organisms, Number of samples, SRA availability, SRA link, Tissues, Cell Types, Cell Lines and Title
