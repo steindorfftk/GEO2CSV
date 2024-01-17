@@ -14,7 +14,7 @@ print('Starting')
 
 #OPTIONS
 verbose = False
-complete = False
+complete = True
 output_name = 'output'
 
 #Input file
@@ -218,43 +218,58 @@ def tissueFinder():
 			with open('tmp/sample.html','w',encoding='utf-8') as file:
 				file.write(sample_content)					
 			with open('tmp/sample.html','r') as texto:
+				tdata = {}
+				cdata = {}
+				ldata = {}
 				for line in texto:
 					if 'tissue:' in line:
 						match = pattern_t.search(line)
 						if match:
 							result=match.group(1).strip()
-							if result not in tissues:
-								tissues.append(result)
+							tissues.append(result)
 					if 'cell type' in line:
 						match = pattern_c.search(line)
 						if match:
 							result=match.group(1).strip()
-							if result not in cell_types:
-								cell_types.append(result)
+							cell_types.append(result)
 					if 'cell line' in line:
 						match = pattern_l.search(line)
 						if match:
 							result=match.group(1).strip()
-							if result not in cell_lines:
-								cell_lines.append(result)
+							cell_lines.append(result)
+				for value in tissues:
+					if value not in tdata.keys():
+						tdata[value] = tissues.count(value)
+				for value in cell_types:
+					if value not in cdata.keys():
+						cdata[value] = cell_types.count(value)
+				for value in cell_lines:
+					if value not in ldata.keys():
+						ldata[value] = cell_lines.count(value)
 	tissue = ''
 	cells = ''
 	lines = ''
-	for value in tissues:
-		if value == tissues[-1]:
-			tissue += value
-		else:
-			tissue += value + ' / '		
-	for value in cell_types:
-		if value == cell_types[-1]:
-			cells += value
-		else:
-			cells += value + ' / '
-	for value in cell_lines:
-		if value == cell_lines[-1]:
-			lines += value
-		else:
-			lines += value + ' / '		
+	for key, value in tdata.items():
+		if len(tdata.keys()) > 0:
+			keys_list = list(tdata.keys())		
+			if key == keys_list[-1]:
+				tissue += key + ' (' + str(value) + ')'
+			else:
+				tissue += key + ' (' + str(value) + ') ' + ' / '		
+	for key, value in cdata.items():
+		if len(cdata.keys()) > 0:
+			keys_list = list(cdata.keys())		
+			if key == keys_list[-1]:
+				cells += key + ' (' + str(value) + ')'
+			else:
+				cells += key + ' (' + str(value) + ') ' + ' / '
+	for key, value in ldata.items():
+		if len(ldata.keys()) > 0:
+			keys_list = list(ldata.keys())	
+			if key == keys_list[-1]:
+				lines += key + ' (' + str(value) + ')'
+			else:
+				lines += key + ' (' + str(value) + ') ' + ' / '	
 	return tissue, cells, lines		
 			
 		
@@ -306,54 +321,56 @@ with open(output_name,'a') as output:
 		html_page = requests.get(geo_path)
 		data_for_studies[value] = {}
 		data_for_studies[value]['Link'] = geo_path
-		output.write(value + ' ; ')
-		output.write(geo_path + ' ; ')	
 		if html_page.status_code==200:
 			html_content=html_page.text
 			print('Parsing ' + value + '... \n')
 			with open('tmp/Page.html','w',encoding='utf-8') as file:
 				file.write(html_content)
 			data_for_studies[value]['Citation'] = citationFinder()	
-			output.write(data_for_studies[value]['Citation'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Experiment_Type'] =  experimentTyper(texto)
-				output.write(data_for_studies[value]['Experiment_Type'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Platform'] = platformFinder(texto)
-				output.write(data_for_studies[value]['Platform'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Organism'] = organismFinder(texto)
-				output.write(data_for_studies[value]['Organism'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Samples'] = sampleFinder(texto)
-				output.write(data_for_studies[value]['Samples'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['SRA'] = sraChecker(texto)
-				output.write(data_for_studies[value]['SRA'] + ' ; ')
 				
 			with open('tmp/Page.html','r') as texto:
 				if data_for_studies[value]['SRA'] == 'Yes':
 					data_for_studies[value]['SRA_link'] = sralinkFinder(texto)
 				else:
 					data_for_studies[value]['SRA_link'] = 'NA'
-				output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
 			if complete == True: 
 				data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'], data_for_studies[value]['Lines'] = tissueFinder()
 			else:
 				data_for_studies[value]['Tissue'] = ''
 				data_for_studies[value]['Cells'] = ''
 				data_for_studies[value]['Lines'] = ''
-			output.write(data_for_studies[value]['Tissue'] + ' ; ' + data_for_studies[value]['Cells'] + ' ; ' + data_for_studies[value]['Lines'] + ' ; ')			
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Title'] = getTitle(texto)
-			output.write(data_for_studies[value]['Title'] + '\n')				
 			n_studies += 1		
 			seconds = time() - start
 			tax = (seconds/n_studies*len(codes)) - seconds 
 			print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') \n---------\n\n')
 		else:
 			print(f'Failed to download HTML. Status code: {html_page.status_code}')
+			output.write(value + ' ; ')
+			output.write(geo_path + ' ; ')	
 			output.write('Connection error \n')
+		output.write(value + ' ; ')
+		output.write(geo_path + ' ; ')	
+		output.write(data_for_studies[value]['Citation'] + ' ; ')
+		output.write(data_for_studies[value]['Experiment_Type'] + ' ; ')
+		output.write(data_for_studies[value]['Platform'] + ' ; ')
+		output.write(data_for_studies[value]['Organism'] + ' ; ')
+		output.write(data_for_studies[value]['Samples'] + ' ; ')
+		output.write(data_for_studies[value]['SRA'] + ' ; ')
+		output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
+		output.write(data_for_studies[value]['Tissue'] + ' ; ' + data_for_studies[value]['Cells'] + ' ; ' + data_for_studies[value]['Lines'] + ' ; ')			
+		output.write(data_for_studies[value]['Title'] + '\n')				
 		output.flush()	
 	
 	
