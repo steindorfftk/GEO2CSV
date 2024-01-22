@@ -151,6 +151,8 @@ def getTitle(target):
 			last_line = False
 		if '>Title' in line:
 			last_line = True
+	if verbose == True:
+		print('Title: ' + title)		
 	return title	
 
 def citationFinder():
@@ -167,6 +169,8 @@ def citationFinder():
 		
 	except:
 		citation = 'Citation missing'
+	if verbose == True:
+		print('Citation: ' + citation)	
 	return citation
 
 def tissueFinder():
@@ -270,6 +274,10 @@ def tissueFinder():
 				lines += key + ' (' + str(value) + ')'
 			else:
 				lines += key + ' (' + str(value) + ') ' + ' / '	
+	if verbose == True:
+		print('Tissues: ' + tissue)
+		print('Cell types: ' + cells)
+		print('Cell lines: ' + lines)	
 	return tissue, cells, lines		
 			
 		
