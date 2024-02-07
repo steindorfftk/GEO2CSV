@@ -12,18 +12,19 @@ import re
 
 print('Starting')
 
+#OPTIONS
+verbose = False
+complete = True
+output_name = 'output'
+
 #Input file
 paths = os.listdir('input/')
-
 
 html_path = []
 
 for path in paths:
 	if '.html' in path:
 		html_path.append(path)
-verbose = False
-tissue = True
-output_name = 'output/Glioblastoma.csv'
 
 firefox_options = Options()
 firefox_options.add_argument('--headless')
@@ -108,7 +109,7 @@ def organismFinder(target):
 		print('Organism: ' + organism)
 	return organism	
 
-	
+
 def sampleFinder(target):
 	samples = ''
 	for line in target:
@@ -150,7 +151,27 @@ def getTitle(target):
 			last_line = False
 		if '>Title' in line:
 			last_line = True
+	if verbose == True:
+		print('Title: ' + title)		
 	return title	
+
+def citationFinder():
+	driver = webdriver.Firefox(options=firefox_options)
+	driver.get(geo_path)
+	try:
+		element = WebDriverWait(driver, 10).until(
+	    	EC.presence_of_element_located((By.CLASS_NAME, "PubmedCitation"))
+		)
+		authors_text = re.search(r'<span class="authors">(.*?)</span><span', element.get_attribute('outerHTML')).group(1)
+		title_text = re.search(r'<span class="title">(.*?)</span><span', element.get_attribute('outerHTML')).group(1)
+		source_text = re.search(r'<span class="source">(.*?)PMID:&nbsp', element.get_attribute('outerHTML')).group(1).replace('</span>','').replace(';',',')
+		citation = authors_text + ' ' + title_text + ' ' + source_text
+		
+	except:
+		citation = 'Citation missing'
+	if verbose == True:
+		print('Citation: ' + citation)	
+	return citation
 
 def tissueFinder():
 	samplecodes = []
@@ -189,8 +210,10 @@ def tissueFinder():
 						sample_links.append(newnewlink)
 	tissues = []
 	cell_types = []
+	cell_lines = []
 	pattern_t = re.compile(r'tissue:(.*?)<br>', re.DOTALL)
 	pattern_c = re.compile(r'cell type:(.*?)<br>', re.DOTALL)
+	pattern_l = re.compile(r'cell line:(.*?)<br>', re.DOTALL)
 	for valor in sample_links:
 		sample_path = valor
 		sample_html = requests.get(sample_path)
@@ -199,32 +222,63 @@ def tissueFinder():
 			with open('tmp/sample.html','w',encoding='utf-8') as file:
 				file.write(sample_content)					
 			with open('tmp/sample.html','r') as texto:
+				tdata = {}
+				cdata = {}
+				ldata = {}
 				for line in texto:
 					if 'tissue:' in line:
 						match = pattern_t.search(line)
 						if match:
 							result=match.group(1).strip()
-							if result not in tissues:
-								tissues.append(result)
+							tissues.append(result)
 					if 'cell type' in line:
 						match = pattern_c.search(line)
 						if match:
 							result=match.group(1).strip()
-							if result not in cell_types:
-								cell_types.append(result)
+							cell_types.append(result)
+					if 'cell line' in line:
+						match = pattern_l.search(line)
+						if match:
+							result=match.group(1).strip()
+							cell_lines.append(result)
+				for value in tissues:
+					if value not in tdata.keys():
+						tdata[value] = tissues.count(value)
+				for value in cell_types:
+					if value not in cdata.keys():
+						cdata[value] = cell_types.count(value)
+				for value in cell_lines:
+					if value not in ldata.keys():
+						ldata[value] = cell_lines.count(value)
 	tissue = ''
 	cells = ''
-	for value in tissues:
-		if value == tissues[-1]:
-			tissue += value
-		else:
-			tissue += value + ' / '		
-	for value in cell_types:
-		if value == cell_types[-1]:
-			cells += value
-		else:
-			cells += value + ' / '
-	return tissue, cells		
+	lines = ''
+	for key, value in tdata.items():
+		if len(tdata.keys()) > 0:
+			keys_list = list(tdata.keys())		
+			if key == keys_list[-1]:
+				tissue += key + ' (' + str(value) + ')'
+			else:
+				tissue += key + ' (' + str(value) + ') ' + ' / '		
+	for key, value in cdata.items():
+		if len(cdata.keys()) > 0:
+			keys_list = list(cdata.keys())		
+			if key == keys_list[-1]:
+				cells += key + ' (' + str(value) + ')'
+			else:
+				cells += key + ' (' + str(value) + ') ' + ' / '
+	for key, value in ldata.items():
+		if len(ldata.keys()) > 0:
+			keys_list = list(ldata.keys())	
+			if key == keys_list[-1]:
+				lines += key + ' (' + str(value) + ')'
+			else:
+				lines += key + ' (' + str(value) + ') ' + ' / '	
+	if verbose == True:
+		print('Tissues: ' + tissue)
+		print('Cell types: ' + cells)
+		print('Cell lines: ' + lines)	
+	return tissue, cells, lines		
 			
 		
 					
@@ -243,7 +297,7 @@ for page in html_path:
 		
 data_for_studies = {}
 
-
+output_name = 'output/' + output_name + '.csv'
 
 #Parse html pages for accession codes	
 n_studies = 0
@@ -252,14 +306,15 @@ files = os.listdir('output/')
 
 if output_name[7:] not in files:
 	with open(output_name,'w') as texto:
-		texto.write('Accession code ; Link ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Title \n')
+		texto.write('Accession code ; Link ; Citation ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Cell line ; Title \n')
 else:
 	with open(output_name,'r') as texto:
 		done_codes = []
 		for line in texto:
 			if 'Accession code' not in line:
 				linha = line.split()
-				done_codes.append(linha[0])	
+				if len(linha)>0:
+					done_codes.append(linha[0])
 		codes = [value for value in codes if value not in done_codes]		
 
 
@@ -274,58 +329,63 @@ with open(output_name,'a') as output:
 		html_page = requests.get(geo_path)
 		data_for_studies[value] = {}
 		data_for_studies[value]['Link'] = geo_path
-		output.write(value + ' ; ')
-		output.write(geo_path + ' ; ')	
 		if html_page.status_code==200:
 			html_content=html_page.text
 			print('Parsing ' + value + '... \n')
 			with open('tmp/Page.html','w',encoding='utf-8') as file:
 				file.write(html_content)
+			data_for_studies[value]['Citation'] = citationFinder()	
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Experiment_Type'] =  experimentTyper(texto)
-				output.write(data_for_studies[value]['Experiment_Type'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Platform'] = platformFinder(texto)
-				output.write(data_for_studies[value]['Platform'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Organism'] = organismFinder(texto)
-				output.write(data_for_studies[value]['Organism'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Samples'] = sampleFinder(texto)
-				output.write(data_for_studies[value]['Samples'] + ' ; ')
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['SRA'] = sraChecker(texto)
-				output.write(data_for_studies[value]['SRA'] + ' ; ')
 				
 			with open('tmp/Page.html','r') as texto:
 				if data_for_studies[value]['SRA'] == 'Yes':
 					data_for_studies[value]['SRA_link'] = sralinkFinder(texto)
 				else:
 					data_for_studies[value]['SRA_link'] = 'NA'
-				output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
-			if tissue == True: 
-				data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'] = tissueFinder()
+			if complete == True: 
+				data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'], data_for_studies[value]['Lines'] = tissueFinder()
 			else:
 				data_for_studies[value]['Tissue'] = ''
 				data_for_studies[value]['Cells'] = ''
-			output.write(data_for_studies[value]['Tissue'] + ' ; ' + data_for_studies[value]['Cells'] + ' ; ')			
+				data_for_studies[value]['Lines'] = ''
 			with open('tmp/Page.html','r') as texto:
 				data_for_studies[value]['Title'] = getTitle(texto)
-			output.write(data_for_studies[value]['Title'] + ' \n ')				
 			n_studies += 1		
 			seconds = time() - start
 			tax = (seconds/n_studies*len(codes)) - seconds 
-			print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') - (Approximately ' + str(round(tax)) + ' seconds remaining) \n---------\n\n')
+			print('\nDone (' + str(n_studies) + '/' + str(len(codes))+ ') \n---------\n\n')
 		else:
 			print(f'Failed to download HTML. Status code: {html_page.status_code}')
-			output.write('Error \n')
+			output.write(value + ' ; ')
+			output.write(geo_path + ' ; ')	
+			output.write('Connection error \n')
+		output.write(value + ' ; ')
+		output.write(geo_path + ' ; ')	
+		output.write(data_for_studies[value]['Citation'] + ' ; ')
+		output.write(data_for_studies[value]['Experiment_Type'] + ' ; ')
+		output.write(data_for_studies[value]['Platform'] + ' ; ')
+		output.write(data_for_studies[value]['Organism'] + ' ; ')
+		output.write(data_for_studies[value]['Samples'] + ' ; ')
+		output.write(data_for_studies[value]['SRA'] + ' ; ')
+		output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
+		output.write(data_for_studies[value]['Tissue'] + ' ; ' + data_for_studies[value]['Cells'] + ' ; ' + data_for_studies[value]['Lines'] + ' ; ')			
+		output.write(data_for_studies[value]['Title'] + '\n')				
 		output.flush()	
 	
 	
+
+
 	
-	
-	
-	
+
 	
 	
 	
