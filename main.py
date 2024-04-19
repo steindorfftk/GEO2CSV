@@ -380,8 +380,7 @@ parser.add_argument('-t', '--tags', type=str, default='',help='Personalized tags
 args = parser.parse_args()
 
 #Save personalized tags
-p_tags = args.tags.split()
-
+p_tags = [value for value in args.tags.replace('(','|').replace(')','').split('|') if value != '']
 
 #Set options
 verbose = False
@@ -488,8 +487,28 @@ with open(output_name,'a') as output:
 					else:
 						data_for_studies[value]['SRA_link'] = 'NA'
 				if complete == True: 
-					data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'], data_for_studies[value]['Lines'], data_for_studies[value]['Race'] , data_for_studies[value]['Ethnicity'] ,  data_for_studies[value]['Ancestry'], personalized = sampledetailFinder()
-					print(personalized)
+					try:
+						data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'], data_for_studies[value]['Lines'], data_for_studies[value]['Race'] , data_for_studies[value]['Ethnicity'] ,  data_for_studies[value]['Ancestry'], personalized = sampledetailFinder()
+					except UnboundLocalError as e:	
+						if os.path.exists('output/error_log.txt'):
+							with open('output/error_log.txt','a') as error:
+								error.write(f'{value} {datetime.datetime.now()}\n')
+								error.write(f'{e}\n')
+						else:
+							with open('output/error_log.txt','w') as error:
+								error.write(f'{value} {datetime.datetime.now()}\n')
+								error.write(f'{e}\n')
+						print(f'No samples found for {value}')
+						data_for_studies[value]['Tissue'] = ''
+						data_for_studies[value]['Cells'] = ''
+						data_for_studies[value]['Lines'] = ''
+						data_for_studies[value]['Race'] = ''
+						data_for_studies[value]['Ethnicity'] = ''
+						data_for_studies[value]['Ancestry'] = ''
+						personalized = {}
+						if len(p_tags) > 0:
+							for tag in p_tags:
+								personalized[tag]['string'] = ''	
 				else:
 					data_for_studies[value]['Tissue'] = ''
 					data_for_studies[value]['Cells'] = ''
@@ -521,7 +540,7 @@ with open(output_name,'a') as output:
 			else:
 				print(f'Failed to download HTML. Status code: {html_page.status_code}')
 				error.write(f'{value} {datetime.datetime.now()}\n')
-				error.write(f'{html_page.status_code}\n')
+				error.write(f'{html_page.status_code}\n')			
 		except Exception as e:
 			if os.path.exists('output/error_log.txt'):
 				with open('output/error_log.txt','a') as error:
@@ -533,6 +552,7 @@ with open(output_name,'a') as output:
 					error.write(f'{e}\n')
 			print(f'Error for {value}: {e}')
 			print('Moving to the next study')
+			codes.append(value)
 			continue
 				
 	
