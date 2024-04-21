@@ -18,8 +18,9 @@
 - 3 - A .csv file with basic information about these studies will be created in output folder
 
 ## GEO_scraper Options
-Currently, there are 3 options you can set when running the script - verbose, quick-mode and output name.
-- output name (-o): Use it to define the output name. Example: "-o My_data" will produce the My_data.csv output file. If not specified, the output file will be named 'output.csv'.
+Currently, there are 4 options you can set when running the script - output name, attributes, verbose and quick-mode.
+- output name (-o): Use it to define the output name. Example: '-o My_data' will produce the My_data.csv output file. If not specified, the output file will be named 'output.csv'.
+- attributes (-a): allows you to specify additional sample attributes not pre-defined in GEO_scraper. Enclose your list of attributes in double quotes, with each attribute in parenthesis. For example: '-a "(antibody) (mother ethnicity)"'
 - verbose (-v): Use it if you want the terminal to print the information while you are scraping. This doesn't alter the execution time or the final output.
 - quick-mode (-q): Use it if you want the program to run on quick mode, i.e., gather only basic information (doesnt collect data on Tissue type, Cell type and Race/Ethnicity/Ancestry from the study samples). This considerably reduces the execution time but excludes relevant study information.
 
