@@ -25,4 +25,4 @@ Currently, there are 4 options you can set when running the script - output name
 - quick-mode (-q): Use it if you want the program to run on quick mode, i.e., gather only basic information (doesnt collect data on Tissue type, Cell type and Race/Ethnicity/Ancestry from the study samples). This considerably reduces the execution time but excludes relevant study information.
 
 
-## This version retrieves the following information: Accession code, GEO link, Citation, Experiment type, Platform, Organisms, Number of samples, SRA availability, SRA link, Cell Types, Cell Lines, Tissues, Genotypes, Strains, Treatments, Age, Sex and Title. Additionally, it's possible to parse for personalized attributes (check GEO_scraper Options section)
+## This version retrieves the following information: Accession code, GEO link, Citation, Experiment type, Platform, Organisms, Number of samples, SRA availability, SRA link, Cell Types, Cell Lines, Tissues, Genotypes, Treatments and Title. Additionally, it's possible to parse for personalized attributes (check GEO_scraper Options section)
