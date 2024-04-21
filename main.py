@@ -252,7 +252,7 @@ parser.add_argument('-a', '--attributes', type=str, default='',help='Personalize
 args = parser.parse_args()
 
 #Save personalized tags
-p_tags = ['cell type','cell line','tissue','genotype','strain','treatment','age','Sex']
+p_tags = ['cell type','cell line','tissue','genotype','treatment']
 c_tags = [value for value in args.attributes.replace('(','|').replace(')','').split('|') if value != '']
 for value in c_tags:
 	p_tags.append(value.strip())
