@@ -210,14 +210,6 @@ def sampledetailFinder():
 			ppp_tags[value]['data'] = [] 
 			ppp_tags[value]['xdata'] = {}
 			ppp_tags[value]['string'] = ''
-	pattern_t = re.compile(r'tissue:(.*?)<br>', re.DOTALL)
-	pattern_c = re.compile(r'cell type:(.*?)<br>', re.DOTALL)
-	pattern_l = re.compile(r'cell line:(.*?)<br>', re.DOTALL)
-	pattern_r = re.compile(r'race:(.*?)<br>', re.DOTALL)
-	pattern_e1 = re.compile(r'reported_ethnicity:(.*?)<br>', re.DOTALL)
-	pattern_e2 = re.compile(r'<br>ethnicity:(.*?)<br>', re.DOTALL)
-	pattern_e3 = re.compile(r'race/ethnicity:(.*?)<br>', re.DOTALL)
-	pattern_a = re.compile(r'ancestry:(.*?)<br>', re.DOTALL)	
 	for valor in sample_links:
 		sample_path = valor
 		sample_html = requests.get(sample_path)
@@ -226,91 +218,19 @@ def sampledetailFinder():
 			with open('tmp/sample.html','w',encoding='utf-8') as file:
 				file.write(sample_content)					
 			with open('tmp/sample.html','r') as texto:
-				tdata = {}
-				cdata = {}
-				ldata = {}
-				rdata = {}
-				edata = {}
-				adata = {}
 				for line in texto:
-					if 'tissue:' in line:
-						match = pattern_t.search(line)
-						if match:
-							result=match.group(1).strip()
-							tissues.append(result)
-					if 'cell type' in line:
-						match = pattern_c.search(line)
-						if match:
-							result=match.group(1).strip()
-							cell_types.append(result)
-					if 'cell line' in line:
-						match = pattern_l.search(line)
-						if match:
-							result=match.group(1).strip()
-							cell_lines.append(result)
-					if 'race:' in line:
-						match = pattern_r.search(line)
-						if match:
-							result=match.group(1).strip()
-							races.append(result)
-					if 'reported_ethnicity:' in line:
-						match = pattern_e1.search(line)
-						if match:
-							result=match.group(1).strip()
-							ethnicities.append(result)
-					if '<br>ethnicity:' in line:
-						match = pattern_e2.search(line)
-						if match:
-							result=match.group(1).strip()
-							ethnicities.append(result)
-					if 'race/ethnicity:' in line:
-						match = pattern_e3.search(line)
-						if match:
-							result=match.group(1).strip()
-							races.append(result)
-							ethnicities.append(result)
-					if 'ancestry:' in line:
-						match = pattern_a.search(line)
-						if match:
-							result=match.group(1).strip()
-							ancestries.append(result)
 					if len(p_tags) > 0:		
 						for value in p_tags:
 							if value in line:
 								match = ppp_tags[value]['pattern'].search(line)
 								if match:
 									result=match.group(1).strip()
-									ppp_tags[value]['data'].append(result)
-									
-				for value in tissues:
-					if value not in tdata.keys():
-						tdata[value] = tissues.count(value)
-				for value in cell_types:
-					if value not in cdata.keys():
-						cdata[value] = cell_types.count(value)
-				for value in cell_lines:
-					if value not in ldata.keys():
-						ldata[value] = cell_lines.count(value)
-				for value in races:
-					if value not in rdata.keys():
-						rdata[value] = races.count(value)
-				for value in ethnicities:
-					if value not in edata.keys():
-						edata[value] = ethnicities.count(value)
-				for value in ancestries:
-					if value not in adata.keys():
-						adata[value] = ancestries.count(value)
+									ppp_tags[value]['data'].append(result)									
 	if len(p_tags) > 0:
 		for value in p_tags:
 			for valueb in ppp_tags[value]['data']:
 				if valueb not in ppp_tags[value]['xdata'].keys():
 					ppp_tags[value]['xdata'][valueb] = ppp_tags[value]['data'].count(valueb)
-	tissue = ''
-	cells = ''
-	lines = ''
-	races1 = ''
-	ethnicities1 = ''
-	ancestries1 = ''
 	if len(p_tags) > 0:
 		for valor in p_tags:
 			for key, value in ppp_tags[valor]['xdata'].items():
@@ -320,67 +240,23 @@ def sampledetailFinder():
 						ppp_tags[valor]['string'] += key + ' (' + str(value) + ')'
 					else:
 						ppp_tags[valor]['string'] += key + ' (' + str(value) + ') ' + ' / '
-	for key, value in tdata.items():
-		if len(tdata.keys()) > 0:
-			keys_list = list(tdata.keys())		
-			if key == keys_list[-1]:
-				tissue += key + ' (' + str(value) + ')'
-			else:
-				tissue += key + ' (' + str(value) + ') ' + ' / '		
-	for key, value in cdata.items():
-		if len(cdata.keys()) > 0:
-			keys_list = list(cdata.keys())		
-			if key == keys_list[-1]:
-				cells += key + ' (' + str(value) + ')'
-			else:
-				cells += key + ' (' + str(value) + ') ' + ' / '
-	for key, value in ldata.items():
-		if len(ldata.keys()) > 0:
-			keys_list = list(ldata.keys())	
-			if key == keys_list[-1]:
-				lines += key + ' (' + str(value) + ')'
-			else:
-				lines += key + ' (' + str(value) + ') ' + ' / '	
-	for key, value in rdata.items():
-		if len(rdata.keys()) > 0:
-			keys_list = list(rdata.keys())	
-			if key == keys_list[-1]:
-				races1 += key + ' (' + str(value) + ')'
-			else:
-				races1 += key + ' (' + str(value) + ') ' + ' / '	
-	for key, value in edata.items():
-		if len(edata.keys()) > 0:
-			keys_list = list(edata.keys())	
-			if key == keys_list[-1]:
-				ethnicities1 += key + ' (' + str(value) + ')'
-			else:
-				ethnicities1 += key + ' (' + str(value) + ') ' + ' / '	
-	for key, value in adata.items():
-		if len(adata.keys()) > 0:
-			keys_list = list(adata.keys())	
-			if key == keys_list[-1]:
-				ancestries1 += key + ' (' + str(value) + ')'
-			else:
-				ancestries1 += key + ' (' + str(value) + ') ' + ' / '	
-	if verbose == True:
-		print('Tissues: ' + tissue)
-		print('Cell types: ' + cells)
-		print('Cell lines: ' + lines)
-		print('Races: ' + races1)
-		print('Ethnicities: ' + ethnicities1)
-		print('Ancestries: ' + ancestries1)	
-	return tissue, cells, lines, races1 , ethnicities1 , ancestries1, ppp_tags	
+#	if verbose == True:		
+	return ppp_tags	
 
 #Get arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', action='store_true', help='Set verbose to True')
 parser.add_argument('-q', '--quick', action='store_true', help='Set complete to False')
 parser.add_argument('-o', '--output', type=str, default='output',help='Output file name')
-parser.add_argument('-t', '--tags', type=str, default='',help='Personalized tags')
+parser.add_argument('-a', '--attributes', type=str, default='',help='Personalized attributes')
 args = parser.parse_args()
 
 #Save personalized tags
-p_tags = [value for value in args.tags.replace('(','|').replace(')','').split('|') if value != '']
+p_tags = ['cell type','cell line','tissue','genotype','strain','treatment','age','Sex']
+c_tags = [value for value in args.attributes.replace('(','|').replace(')','').split('|') if value != '']
+for value in c_tags:
+	p_tags.append(value.strip())
+
 
 #Set options
 verbose = False
@@ -432,10 +308,7 @@ for value in p_tags:
 if output_name[7:] not in files:
 	if len(p_tags) > 0:
 		with open(output_name,'w') as texto:
-			texto.write(f'Accession code ; Link ; Citation ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Cell line ; Race ; Ethnicity ; Ancestry {pp_tags} ; Title \n')
-	else:
-		with open(output_name,'w') as texto:
-			texto.write(f'Accession code ; Link ; Citation ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link ; Tissue ; Cell type ; Cell line ; Race ; Ethnicity ; Ancestry ; Title \n')
+			texto.write(f'Accession code ; Link ; Citation ; Experiment Type ; Platform ; Organism ; Samples ; SRA ; SRA Link {pp_tags} ; Title \n')
 	all_codes = len(codes)
 else:
 	with open(output_name,'r') as texto:
@@ -488,7 +361,7 @@ with open(output_name,'a') as output:
 						data_for_studies[value]['SRA_link'] = 'NA'
 				if complete == True: 
 					try:
-						data_for_studies[value]['Tissue'], data_for_studies[value]['Cells'], data_for_studies[value]['Lines'], data_for_studies[value]['Race'] , data_for_studies[value]['Ethnicity'] ,  data_for_studies[value]['Ancestry'], personalized = sampledetailFinder()
+						personalized = sampledetailFinder()
 					except UnboundLocalError as e:	
 						if os.path.exists('output/error_log.txt'):
 							with open('output/error_log.txt','a') as error:
@@ -499,23 +372,15 @@ with open(output_name,'a') as output:
 								error.write(f'{value} {datetime.datetime.now()}\n')
 								error.write(f'{e}\n')
 						print(f'No samples found for {value}')
-						data_for_studies[value]['Tissue'] = ''
-						data_for_studies[value]['Cells'] = ''
-						data_for_studies[value]['Lines'] = ''
-						data_for_studies[value]['Race'] = ''
-						data_for_studies[value]['Ethnicity'] = ''
-						data_for_studies[value]['Ancestry'] = ''
 						personalized = {}
 						if len(p_tags) > 0:
 							for tag in p_tags:
 								personalized[tag]['string'] = ''	
 				else:
-					data_for_studies[value]['Tissue'] = ''
-					data_for_studies[value]['Cells'] = ''
-					data_for_studies[value]['Lines'] = ''
-					data_for_studies[value]['Race'] = ''
-					data_for_studies[value]['Ethnicity'] = ''
-					data_for_studies[value]['Ancestry'] = ''
+						personalized = {}
+						if len(p_tags) > 0:
+							for tag in p_tags:
+								personalized[tag]['string'] = ''
 				with open('tmp/Page.html','r') as texto:
 					data_for_studies[value]['Title'] = getTitle(texto)
 				output.write(value + ' ; ')
@@ -527,7 +392,6 @@ with open(output_name,'a') as output:
 				output.write(data_for_studies[value]['Samples'] + ' ; ')
 				output.write(data_for_studies[value]['SRA'] + ' ; ')
 				output.write(data_for_studies[value]['SRA_link'] + ' ; ')	
-				output.write(data_for_studies[value]['Tissue'] + ' ; ' + data_for_studies[value]['Cells'] + ' ; ' + data_for_studies[value]['Lines'] + ' ; '+ data_for_studies[value]['Race'] + ' ; '+ data_for_studies[value]['Ethnicity'] + ' ; '+ data_for_studies[value]['Ancestry'] + ' ; ')
 				if len(p_tags) > 0:
 					for tag in p_tags:
 						output.write(personalized[tag]['string'] + ' ; ')
