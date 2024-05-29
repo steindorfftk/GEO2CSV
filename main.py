@@ -289,6 +289,7 @@ for page in html_path:
 	for value in acc:
 		codes.append(value)
 
+
 #Start data dictionary		
 data_for_studies = {}
 
@@ -317,14 +318,14 @@ else:
 			if 'Accession code' not in line:
 				linha = line.split()
 				if len(linha)>0:
-					done_codes.append(linha[0])
-		all_codes = len(codes)
-		codes = [value for value in codes if value not in done_codes]
+					if 'GS' in linha[0]:
+						done_codes.append(linha[0].replace('"','').replace(';',''))
+						all_codes = len(codes)
+		codes = [value for value in codes if value.strip() not in done_codes]
 		n_studies = len(done_codes)
 
-
-
 #codes = ['GSE259276','GSE245108','GSE250469','GSE222009','GSE234729']
+
 	
 
 with open(output_name,'a') as output:		
